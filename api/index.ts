@@ -1,27 +1,8 @@
 import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
-
-// ===== 静态文件服务（本地/Cloud Studio 兜底） =====
-const distPath = path.join(__dirname, '..', 'dist');
-app.get('/', (_req, res) => {
-  const fp = path.join(distPath, 'index.html');
-  if (fs.existsSync(fp)) return res.sendFile(fp);
-  res.redirect('/index.html');
-});
-app.get('/admin', (_req, res) => {
-  const fp = path.join(distPath, 'admin.html');
-  if (fs.existsSync(fp)) return res.sendFile(fp);
-  res.redirect('/');
-});
 
 // ===== Supabase =====
 const supabaseUrl = process.env.SUPABASE_URL || '';
@@ -29,10 +10,16 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ===== Gemini AI =====
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-  httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
-});
+let ai: any = null;
+try {
+  const { GoogleGenAI } = require('@google/genai');
+  ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY || '',
+    httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+  });
+} catch (e) {
+  console.log('[AI] Gemini 未加载，使用模拟回复');
+}
 
 // ===== 错误处理 =====
 function handleDbError(res: express.Response, err: unknown) {
