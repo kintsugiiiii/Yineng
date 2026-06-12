@@ -5,7 +5,8 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/admin", "destination": "/api" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/(.*)", "destination": "/admin.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
