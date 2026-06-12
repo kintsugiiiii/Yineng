@@ -29,9 +29,13 @@ function handleDbError(res: express.Response, err: unknown) {
 
 // ===== 技能 API =====
 app.get('/api/skills', async (_req, res) => {
-  const { data, error } = await supabase.from('skills').select('*').order('created_at', { ascending: false });
-  if (error) return handleDbError(res, error);
-  res.json({ success: true, data: data || [] });
+  try {
+    const { data, error } = await supabase.from('skills').select('*');
+    if (error) return res.json({ success: false, error: error.message, detail: error });
+    res.json({ success: true, data: data || [] });
+  } catch (e: any) {
+    res.json({ success: false, error: e.message, stack: e.stack });
+  }
 });
 
 app.post('/api/skills', async (req, res) => {
