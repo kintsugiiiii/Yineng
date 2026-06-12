@@ -7,8 +7,16 @@ const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 // ===== 诊断接口 =====
-app.get('/api/debug', (_req, res) => {
-  res.json({ url: SUPABASE_URL.slice(0, 20) + '...', hasKey: !!SUPABASE_KEY, keyPrefix: SUPABASE_KEY.slice(0, 15) + '...' });
+app.get('/api/debug', async (_req, res) => {
+  const results: any = { supabaseUrl: SUPABASE_URL, hasKey: !!SUPABASE_KEY };
+  for (const table of ['skills', 'users', 'messages']) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=id&limit=1`, { headers: { apikey: SUPABASE_KEY } });
+      const data = await r.json();
+      results[table] = { ok: r.ok, status: r.status, data: Array.isArray(data) ? `array(${data.length})` : data };
+    } catch (e: any) { results[table] = { error: e.message }; }
+  }
+  res.json(results);
 });
 const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json', 'Prefer': 'return=representation' };
 const SB = (path: string, opts: any = {}) =>
