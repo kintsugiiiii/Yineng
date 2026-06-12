@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
@@ -7,6 +9,24 @@ dotenv.config();
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
+
+// ===== 静态文件服务（Vercel 上不走这里，但本地/Cloud Studio 兜底） =====
+const distPath = path.join(__dirname, '..', 'dist');
+app.get('/', (_req, res) => {
+  const fp = path.join(distPath, 'index.html');
+  if (fs.existsSync(fp)) return res.sendFile(fp);
+  res.send('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>易能</title></head><body><div id="root"></div><script>window.location.href="/index.html"</script></body></html>');
+});
+app.get('/admin', (_req, res) => {
+  const fp = path.join(distPath, 'admin.html');
+  if (fs.existsSync(fp)) return res.sendFile(fp);
+  res.redirect('/');
+});
+app.get('/admin/*', (_req, res) => {
+  const fp = path.join(distPath, 'admin.html');
+  if (fs.existsSync(fp)) return res.sendFile(fp);
+  res.redirect('/');
+});
 
 // ===== Supabase =====
 const supabaseUrl = process.env.SUPABASE_URL || '';
