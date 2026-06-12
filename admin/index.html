@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>易能管理后台</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+input, select, button, textarea { font-family: inherit; }
+
+/* Login page */
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
+.login-box { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px; width: 380px; max-width: 90vw; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+.login-box .brand-icon { width: 48px; height: 48px; background: #003ec7; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: white; font-size: 24px; font-weight: 800; }
+.login-box h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; text-align: center; }
+.login-box h1 span { color: #003ec7; }
+.login-box .sub { color: #666; font-size: 13px; text-align: center; margin-bottom: 28px; }
+.login-box input { width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 14px; margin-bottom: 16px; transition: border-color 0.2s; outline: none; }
+.login-box input:focus { border-color: #003ec7; }
+.login-box .btn-primary { width: 100%; padding: 14px; background: #003ec7; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.login-box .btn-primary:hover { background: #0035a8; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,62,199,0.3); }
+.login-box .error { background: #fff0f0; color: #e33; font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: none; }
+.login-box .hint { text-align: center; margin-top: 16px; font-size: 12px; color: #999; }
+
+/* Dashboard layout */
+.dashboard { display: none; min-height: 100vh; }
+.dashboard.active { display: flex; }
+.sidebar { width: 240px; background: #1a1a2e; color: white; padding: 24px 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+.sidebar .brand { padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; }
+.sidebar .brand .brand-logo { width: 36px; height: 36px; background: #003ec7; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 800; margin-right: 10px; vertical-align: middle; }
+.sidebar .brand h2 { font-size: 20px; font-weight: 800; display: inline-block; vertical-align: middle; }
+.sidebar .brand h2 span { color: #e7eb00; }
+.sidebar .brand small { display: block; color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 4px; }
+.sidebar .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 24px; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500; border-left: 3px solid transparent; }
+.sidebar .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+.sidebar .nav-item.active { background: rgba(255,255,255,0.08); color: white; border-left-color: #e7eb00; }
+.sidebar .nav-item .nav-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.sidebar .logout-btn { margin: 16px 24px; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; width: calc(100% - 48px); text-align: center; }
+.sidebar .logout-btn:hover { background: rgba(255,80,80,0.15); color: #ff6b6b; border-color: rgba(255,80,80,0.3); }
+
+.main-content { margin-left: 240px; flex: 1; padding: 32px; min-height: 100vh; }
+.main-content .page-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+.main-content .page-title .title-bar { width: 4px; height: 20px; background: #003ec7; border-radius: 2px; display: inline-block; }
+.main-content .section-desc { color: #888; font-size: 13px; margin-bottom: 24px; padding-left: 14px; }
+
+/* Stats cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.stat-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eee; }
+.stat-card .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.stat-card .stat-icon svg { width: 22px; height: 22px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+.stat-card .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+
+/* Tables */
+.table-container { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eee; overflow: hidden; }
+.table-container .table-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+.table-container table { width: 100%; border-collapse: collapse; }
+.table-container th { background: #f8f9fa; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eee; }
+.table-container td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+.table-container tr:last-child td { border-bottom: none; }
+.table-container tr:hover td { background: #f8f9ff; }
+.table-container .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; vertical-align: middle; }
+.table-container .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-blue { background: #eef2ff; color: #003ec7; }
+.badge-green { background: #e6f7e6; color: #1a8a1a; }
+.badge-red { background: #fff0f0; color: #e33; }
+.badge-yellow { background: #fffde6; color: #996600; }
+.table-container .action-btn { padding: 6px 14px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.action-delete { background: #fff0f0; color: #e33; }
+.action-delete:hover { background: #ffe0e0; }
+
+.page-section { display: none; }
+.page-section.active { display: block; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 64px; }
+  .sidebar .brand { padding: 16px 12px; }
+  .sidebar .brand .brand-logo { margin-right: 0; }
+  .sidebar .brand h2 { display: none; }
+  .sidebar .brand small { display: none; }
+  .sidebar .nav-item { padding: 14px; justify-content: center; }
+  .sidebar .nav-item span:not(.nav-dot) { display: none; }
+  .sidebar .logout-btn { padding: 12px 8px; font-size: 11px; }
+  .main-content { margin-left: 64px; padding: 20px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .table-container { overflow-x: auto; }
+}
+
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.confirm-dialog { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; }
+.confirm-dialog.show { display: flex; }
+.confirm-dialog .box { background: white; border-radius: 16px; padding: 28px; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.confirm-dialog .box p { font-size: 14px; color: #333; margin-bottom: 20px; line-height: 1.6; }
+.confirm-dialog .box .actions { display: flex; gap: 10px; }
+.confirm-dialog .box .actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.confirm-dialog .box .actions .btn-cancel { background: #f0f0f0; color: #666; }
+.confirm-dialog .box .actions .btn-cancel:hover { background: #e5e5e5; }
+.confirm-dialog .box .actions .btn-confirm { background: #e33; color: white; }
+.confirm-dialog .box .actions .btn-confirm:hover { background: #c22; }
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <div class="brand-icon">Y</div>
+    <h1><span>易能</span> 管理后台</h1>
+    <p class="sub">技能交换平台运营管理中心</p>
+    <div class="error" id="loginError">用户名或密码错误</div>
+    <input type="text" id="adminUser" placeholder="管理员账号" value="admin">
+    <input type="password" id="adminPass" placeholder="管理员密码" value="yinen2024">
+    <button class="btn-primary" onclick="adminLogin()">登 录</button>
+    <p class="hint">默认账号: admin / 密码: yinen2024</p>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">
+      <span class="brand-logo">Y</span>
+      <h2><span>易能</span></h2>
+      <small>管理控制台 v1.0</small>
+    </div>
+    <div class="nav-item active" onclick="switchPage('dashboard-page', this)">
+      <span class="nav-dot" style="background:#003ec7;"></span><span>数据概览</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('users-page', this)">
+      <span class="nav-dot" style="background:#22c55e;"></span><span>用户管理</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('skills-page', this)">
+      <span class="nav-dot" style="background:#eab308;"></span><span>技能管理</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('messages-page', this)">
+      <span class="nav-dot" style="background:#a855f7;"></span><span>消息监控</span>
+    </div>
+    <div class="logout-btn" onclick="adminLogout()">退出登录</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Dashboard Page -->
+    <div class="page-section active" id="dashboard-page">
+      <div class="page-title"><span class="title-bar"></span>数据概览</div>
+      <p class="section-desc">易能平台运营实时数据统计</p>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon" style="background:#eef2ff;"><svg viewBox="0 0 24 24" fill="none" stroke="#003ec7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="stat-value" id="statUsers">-</div><div class="stat-label">注册用户</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fffde6;"><svg viewBox="0 0 24 24" fill="none" stroke="#996600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="stat-value" id="statSkills">-</div><div class="stat-label">技能卡片</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#e6f7e6;"><svg viewBox="0 0 24 24" fill="none" stroke="#1a8a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="stat-value" id="statMessages">-</div><div class="stat-label">消息记录</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#f0f0ff;"><svg viewBox="0 0 24 24" fill="none" stroke="#6b6bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-value" id="statOnline">-</div><div class="stat-label">当前在线</div></div>
+      </div>
+      <div class="table-container">
+        <div class="table-header">最近发布的技能</div>
+        <div id="recentSkills"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- Users Page -->
+    <div class="page-section" id="users-page">
+      <div class="page-title"><span class="title-bar"></span>用户管理</div>
+      <p class="section-desc">查看和管理平台注册用户</p>
+      <div class="table-container">
+        <div class="table-header">全部用户列表</div>
+        <div id="usersTable"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- Skills Page -->
+    <div class="page-section" id="skills-page">
+      <div class="page-title"><span class="title-bar"></span>技能管理</div>
+      <p class="section-desc">管理所有发布的技能交换卡片</p>
+      <div class="table-container">
+        <div class="table-header">全部技能卡片</div>
+        <div id="skillsTable"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- Messages Page -->
+    <div class="page-section" id="messages-page">
+      <div class="page-title"><span class="title-bar"></span>消息监控</div>
+      <p class="section-desc">监控平台聊天消息记录</p>
+      <div class="table-container">
+        <div class="table-header">全部消息会话</div>
+        <div id="messagesTable"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="box">
+    <p id="confirmMessage">确定要执行此操作吗？</p>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeConfirm()">取消</button>
+      <button class="btn-confirm" id="confirmActionBtn" onclick="closeConfirm()">确认</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '';
+let adminToken = localStorage.getItem('y_admin_token');
+let confirmCallback = null;
+
+function showConfirm(msg, cb) {
+  document.getElementById('confirmMessage').textContent = msg;
+  document.getElementById('confirmDialog').classList.add('show');
+  confirmCallback = cb;
+}
+function closeConfirm() {
+  document.getElementById('confirmDialog').classList.remove('show');
+}
+document.getElementById('confirmActionBtn').onclick = function() {
+  closeConfirm();
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+};
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (opts.noJson) delete headers['Content-Type'];
+  const res = await fetch(API_BASE + path, { headers, ...opts });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
+async function adminApi(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (adminToken) headers['Authorization'] = 'Bearer ' + adminToken;
+  const res = await fetch(API_BASE + path, { headers, ...opts });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
+async function adminLogin() {
+  const username = document.getElementById('adminUser').value.trim();
+  const password = document.getElementById('adminPass').value.trim();
+  if (!username || !password) { showError('请输入账号和密码'); return; }
+  try {
+    const res = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    adminToken = res.data.token;
+    localStorage.setItem('y_admin_token', adminToken);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    loadDashboard(); loadUsers(); loadSkills(); loadMessages();
+  } catch (e) {
+    showError(e.message || '登录失败，请检查账号密码');
+  }
+}
+
+function adminLogout() {
+  adminToken = null;
+  localStorage.removeItem('y_admin_token');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('dashboard').classList.remove('active');
+}
+
+(async function checkAuth() {
+  if (adminToken) {
+    try {
+      const res = await api('/api/admin/verify', { method: 'POST', body: JSON.stringify({ token: adminToken }) });
+      if (res.success) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('dashboard').classList.add('active');
+        loadDashboard(); loadUsers(); loadSkills(); loadMessages();
+        return;
+      }
+    } catch {}
+  }
+  localStorage.removeItem('y_admin_token');
+  adminToken = null;
+})();
+
+function switchPage(pageId, el) {
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+async function loadDashboard() {
+  try {
+    const res = await api('/api/admin/stats');
+    const d = res.data;
+    document.getElementById('statUsers').textContent = d.totalUsers;
+    document.getElementById('statSkills').textContent = d.totalSkills;
+    document.getElementById('statMessages').textContent = d.totalMessages;
+    document.getElementById('statOnline').textContent = d.onlineUsers;
+    const skillsRes = await api('/api/admin/skills');
+    const skills = skillsRes.data.slice(0, 5);
+    let html = '<table><thead><tr><th>用户</th><th>技能</th><th>想学</th><th>信用分</th><th>时间</th></tr></thead><tbody>';
+    skills.forEach(s => {
+      html += `<tr><td><img class="avatar-sm" src="${s.userAvatar}" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">${s.userName}</td><td>${s.teachSkill}</td><td>${s.learnSkill}</td><td><span class="badge badge-blue">${s.credibility}</span></td><td>${s.time || '-'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('recentSkills').innerHTML = html;
+  } catch (e) {
+    document.getElementById('recentSkills').innerHTML = '<div style="padding:20px;text-align:center;color:#e33;">加载失败</div>';
+  }
+}
+
+async function loadUsers() {
+  try {
+    const res = await api('/api/admin/users');
+    const users = res.data;
+    let html = '<table><thead><tr><th>头像</th><th>姓名</th><th>学校</th><th>信用分</th><th>职业</th><th>年龄</th><th>操作</th></tr></thead><tbody>';
+    users.forEach(u => {
+      html += `<tr><td><img class="avatar-sm" src="${u.avatar}" referrerpolicy="no-referrer" onerror="this.style.display=\'none'"></td><td><strong>${u.name}</strong></td><td>${u.school || '-'}</td><td><span class="badge badge-blue">${u.credibility}</span></td><td>${u.occupation || '-'}</td><td>${u.age || '-'}</td><td><button class="action-btn action-delete" onclick="deleteUser('${u.id}','${u.name}')">删除</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('usersTable').innerHTML = html;
+  } catch (e) {
+    document.getElementById('usersTable').innerHTML = '<div style="padding:20px;text-align:center;color:#e33;">加载失败</div>';
+  }
+}
+
+async function loadSkills() {
+  try {
+    const res = await api('/api/admin/skills');
+    const skills = res.data;
+    let html = '<table><thead><tr><th>用户</th><th>技能（教）</th><th>技能（学）</th><th>匹配度</th><th>信用分</th><th>方式</th><th>操作</th></tr></thead><tbody>';
+    skills.forEach(s => {
+      const methodMap = { online: '线上', offline: '线下', both: '线上+线下' };
+      html += `<tr><td><img class="avatar-sm" src="${s.userAvatar}" referrerpolicy="no-referrer" onerror="this.style.display=\'none'">${s.userName}</td><td><strong>${s.teachSkill}</strong></td><td>${s.learnSkill}</td><td><span class="badge badge-green">${s.matchScore}%</span></td><td><span class="badge badge-blue">${s.credibility}</span></td><td>${methodMap[s.method] || '-'}</td><td><button class="action-btn action-delete" onclick="deleteSkill('${s.id}','${s.teachSkill}')">删除</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('skillsTable').innerHTML = html;
+  } catch (e) {
+    document.getElementById('skillsTable').innerHTML = '<div style="padding:20px;text-align:center;color:#e33;">加载失败</div>';
+  }
+}
+
+async function loadMessages() {
+  try {
+    const res = await api('/api/admin/messages');
+    const msgs = res.data;
+    let html = '<table><thead><tr><th>会话</th><th>类型</th><th>最新消息</th><th>时间</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    msgs.forEach(m => {
+      const typeMap = { chat: '私聊', invitation: '邀请', system: '系统', group: '群组' };
+      const typeClass = { chat: 'badge-blue', invitation: 'badge-yellow', system: 'badge-green', group: 'badge-blue' };
+      html += `<tr><td><strong>${m.name}</strong></td><td><span class="badge ${typeClass[m.type] || 'badge-blue'}">${typeMap[m.type] || m.type}</span></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.lastMessage || '-'}</td><td>${m.time || '-'}</td><td>${m.isUnread ? '<span class="badge badge-red">未读</span>' : '<span class="badge badge-green">已读</span>'}</td><td><button class="action-btn action-delete" onclick="deleteMessage('${m.id}','${m.name}')">删除</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('messagesTable').innerHTML = html;
+  } catch (e) {
+    document.getElementById('messagesTable').innerHTML = '<div style="padding:20px;text-align:center;color:#e33;">加载失败</div>';
+  }
+}
+
+function deleteUser(id, name) {
+  showConfirm('确定要删除用户「' + name + '」吗？此操作不可撤销！', async function() {
+    try {
+      await api('/api/admin/users/' + id, { method: 'DELETE' });
+      loadUsers(); loadDashboard();
+    } catch (e) { alert('删除失败: ' + e.message); }
+  });
+}
+
+function deleteSkill(id, name) {
+  showConfirm('确定要删除技能卡片「' + name + '」吗？', async function() {
+    try {
+      await api('/api/admin/skills/' + id, { method: 'DELETE' });
+      loadSkills(); loadDashboard();
+    } catch (e) { alert('删除失败: ' + e.message); }
+  });
+}
+
+function deleteMessage(id, name) {
+  showConfirm('确定要删除「' + name + '」的消息会话吗？', async function() {
+    try {
+      await api('/api/admin/messages/' + id, { method: 'DELETE' });
+      loadMessages(); loadDashboard();
+    } catch (e) { alert('删除失败: ' + e.message); }
+  });
+}
+</script>
+</body>
+</html>
