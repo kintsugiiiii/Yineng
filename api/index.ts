@@ -5,11 +5,36 @@ app.use(express.json({ limit: '10mb' }));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
+const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json', 'Prefer': 'return=representation' };
 const SB = (path: string, opts: any = {}) =>
-  fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json', 'Prefer': 'return=representation' },
-    ...opts,
-  }).then(async r => { const d = await r.json(); if (!r.ok) throw { status: r.status, ...d }; return d; });
+  fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS, ...opts })
+    .then(async r => { const d = await r.json(); if (!r.ok) throw { status: r.status, ...d }; return d; });
+
+// ===== 自动建表 & 种子数据 =====
+async function ensureTables() {
+  // 用 SQL 编辑器 API 尝试建表
+  const sql = `
+CREATE TABLE IF NOT EXISTS public.users (id text PRIMARY KEY, name text NOT NULL DEFAULT '', avatar text DEFAULT '', title text DEFAULT '', school text DEFAULT '', credibility int8 DEFAULT 90, "energyValue" int8 DEFAULT 100, "swapCount" int8 DEFAULT 0, gender text DEFAULT '男', age int8 DEFAULT 20, occupation text DEFAULT '', major text DEFAULT '', membership text DEFAULT 'free', created_at timestamptz DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.skills (id text PRIMARY KEY, "userName" text NOT NULL DEFAULT '', "userAvatar" text DEFAULT '', credibility int8 DEFAULT 90, rating float4 DEFAULT 4.5, "matchScore" int8 DEFAULT 85, "teachSkill" text DEFAULT '', "learnSkill" text DEFAULT '', proficiency text DEFAULT 'beginner', time text DEFAULT '', method text DEFAULT 'online', school text DEFAULT '', "isUserCreated" bool DEFAULT false, created_at timestamptz DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.messages (id text PRIMARY KEY, name text NOT NULL DEFAULT '', avatar text DEFAULT '', "lastMessage" text DEFAULT '', time text DEFAULT '', "isUnread" bool DEFAULT false, type text DEFAULT 'chat', "matchedSkillName" text DEFAULT '', "invitationStatus" text DEFAULT '', credibility int8 DEFAULT 0, created_at timestamptz DEFAULT now());
+  `.trim();
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, { method: 'POST', headers: HEADERS, body: JSON.stringify({ query: sql }) });
+    console.log('[DB] Table creation attempted via RPC');
+  } catch { /* RPC not available */ }
+  // 尝试插入种子数据
+  try {
+    const users = await SB('users?select=id&limit=1').catch(() => []);
+    if (!users || users.length === 0) {
+      await SB('users', { method: 'POST', body: JSON.stringify([{ id: 'user-1', name: '张三', school: '上海财经大学', credibility: 95, energyValue: 240, swapCount: 12, gender: '男', age: 21, occupation: '大学生', major: '数据科学与金融科技' }]) }).catch(() => {});
+    }
+    const skills = await SB('skills?select=id&limit=1').catch(() => []);
+    if (!skills || skills.length === 0) {
+      await SB('skills', { method: 'POST', body: JSON.stringify([{ id: 'skill-1', userName: '张三', credibility: 95, rating: 5.0, matchScore: 92, teachSkill: 'Python 基础', learnSkill: '吉他', proficiency: 'beginner', time: '周末晚上8点后', method: 'both', school: '清华大学' }]) }).catch(() => {});
+    }
+  } catch { /* seed may fail if tables don't exist */ }
+}
+ensureTables();
 
 // ===== 技能 API =====
 app.get('/api/skills', async (_req, res) => {
