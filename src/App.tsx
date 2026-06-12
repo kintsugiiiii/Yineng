@@ -194,34 +194,48 @@ export default function App() {
       apiFetch('/api/messages').catch(() => null),
       apiFetch('/api/profile').catch(() => null),
     ]).then(([skillsRes, messagesRes, profileRes]) => {
+      let skills: SkillItem[], msgs: MessageItem[], prof: UserProfile;
+
       if (skillsRes?.data) {
-        setSkillsList(skillsRes.data);
-        localStorage.setItem('y_skills', JSON.stringify(skillsRes.data));
+        skills = skillsRes.data;
       } else if (savedSkills) {
-        setSkillsList(JSON.parse(savedSkills));
+        skills = JSON.parse(savedSkills);
       } else {
-        setSkillsList(DEFAULT_SKILLS);
-        localStorage.setItem('y_skills', JSON.stringify(DEFAULT_SKILLS));
+        skills = DEFAULT_SKILLS;
+      }
+      setSkillsList(skills);
+      localStorage.setItem('y_skills', JSON.stringify(skills));
+      // Sync local skills to server
+      if (!skillsRes?.data && skills.length > 0) {
+        Promise.all(skills.map(s => apiFetch('/api/skills', { method: 'POST', body: JSON.stringify(s) }).catch(() => {})));
       }
 
       if (messagesRes?.data) {
-        setMessages(messagesRes.data);
-        localStorage.setItem('y_messages', JSON.stringify(messagesRes.data));
+        msgs = messagesRes.data;
       } else if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
+        msgs = JSON.parse(savedMessages);
       } else {
-        setMessages(DEFAULT_MESSAGES);
-        localStorage.setItem('y_messages', JSON.stringify(DEFAULT_MESSAGES));
+        msgs = DEFAULT_MESSAGES;
+      }
+      setMessages(msgs);
+      localStorage.setItem('y_messages', JSON.stringify(msgs));
+      // Sync local messages to server
+      if (!messagesRes?.data && msgs.length > 0) {
+        apiFetch('/api/messages/batch', { method: 'PUT', body: JSON.stringify({ messages: msgs }) }).catch(() => {});
       }
 
       if (profileRes?.data) {
-        setProfile(profileRes.data);
-        localStorage.setItem('y_profile', JSON.stringify(profileRes.data));
+        prof = profileRes.data;
       } else if (savedProfile) {
-        setProfile(JSON.parse(savedProfile));
+        prof = JSON.parse(savedProfile);
       } else {
-        setProfile(DEFAULT_PROFILE);
-        localStorage.setItem('y_profile', JSON.stringify(DEFAULT_PROFILE));
+        prof = DEFAULT_PROFILE;
+      }
+      setProfile(prof);
+      localStorage.setItem('y_profile', JSON.stringify(prof));
+      // Sync local profile to server
+      if (!profileRes?.data) {
+        apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify(prof) }).catch(() => {});
       }
     });
   }, []);
