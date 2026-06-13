@@ -1,0 +1,2 @@
+# Cloudflare Pages 代理规则
+/api/*  https://yineng-kohl.vercel.app/api/:splat  200
