@@ -14,7 +14,7 @@ import LoginSection from './components/LoginSection';
 import { SkillItem, MessageItem, UserProfile, ChatHistoryMessage } from './types';
 
 // ===== API 数据同步层 =====
-const API_BASE = '';
+const API_BASE = 'https://yineng-kohl.vercel.app';
 
 async function apiFetch(path: string, options?: RequestInit) {
   const res = await fetch(API_BASE + path, {
