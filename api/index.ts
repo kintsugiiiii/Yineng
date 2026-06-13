@@ -3,6 +3,15 @@ import express from 'express';
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
+// CORS：允许 Cloudflare Pages 域名跨域访问
+app.use((_req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, Prefer');
+  if (_req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
 
